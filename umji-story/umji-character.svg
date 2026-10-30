@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 180"><defs><linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#bf936b"/><stop offset=".6" stop-color="#976843"/><stop offset="1" stop-color="#eed8bd"/></linearGradient><radialGradient id="face"><stop stop-color="#fff8ed"/><stop offset=".75" stop-color="#f5e3cf"/><stop offset="1" stop-color="#b99170"/></radialGradient><linearGradient id="ear" x1="0" x2="1"><stop stop-color="#70533f"/><stop offset=".5" stop-color="#b69272"/><stop offset="1" stop-color="#e1c3a2"/></linearGradient></defs>
+<g stroke-linecap="round" stroke-linejoin="round">
+<!-- plume tail --> <path d="M35 92 Q-5 35 22 34 Q61 33 61 64" fill="none" stroke="#a77c5b" stroke-width="28"/><path d="M35 85 Q-2 30 24 31 Q53 29 62 61" fill="none" stroke="#e8d4c0" stroke-width="17"/><path d="M22 35Q8 22 0 31M25 40Q14 18 4 24M37 40Q24 15 13 17" stroke="#f5e2d1" stroke-width="3" fill="none"/>
+<!-- body --> <path d="M44 86 Q42 48 104 57 Q153 53 178 91 L176 124 Q133 140 88 126 Q55 132 44 109Z" fill="#f4e9da"/><path d="M45 83 Q50 48 103 58 Q137 56 157 72 Q153 103 115 105 Q81 112 47 103Z" fill="url(#coat)"/>
+<!-- legs -->
+<path d="M60 111 L54 150 Q50 161 66 164 L82 164 Q92 158 81 153 L86 116Z" fill="#f2e8de"/>
+<path d="M135 110 L132 148 Q127 162 145 164 L159 162 Q169 156 157 151 L160 110Z" fill="#f1e4d5"/>
+<path d="M174 107 L181 148 Q174 161 191 166 L208 164 Q221 155 204 149 L202 101Z" fill="#f7e9d9"/>
+<path d="M79 113 L83 151 Q80 160 95 162 L108 161 Q120 154 105 148 L104 110Z" fill="#e2c9b0"/>
+<!-- paw fur -->
+<g stroke="#d3bea7" stroke-width="2"><path d="M58 155l-5 7M68 158l-1 7M78 155l3 7M138 156l-3 8M149 154v10M191 155l-2 9M200 153l5 9"/></g>
+<!-- neck ruff -->
+<path d="M146 69Q161 54 185 62L204 112Q193 134 167 142L164 124L151 134L154 107L139 117Z" fill="#fff0df"/>
+<path d="M163 111l-9 30m25-28l-3 31m15-33l6 25" fill="none" stroke="#e2ceb8" stroke-width="3"/>
+<!-- ears -->
+<path d="M172 56 Q157 69 161 111 Q170 137 183 125 L194 80Z" fill="url(#ear)"/>
+<!-- face -->
+<path d="M178 47 Q206 25 230 55 Q250 77 245 103 Q240 133 211 133 Q177 132 173 99Z" fill="url(#face)"/>
+<!-- forehead and parting --> <path d="M181 74Q186 45 206 43Q223 54 224 73Q216 68 209 70Q193 58 181 74" fill="#b99472"/><path d="M205 42Q208 56 209 68" stroke="#fff4de" stroke-width="10" fill="none"/>
+<!-- drooping long visible ear --> <path d="M174 60Q153 74 158 118Q159 135 171 135Q185 124 184 89Z" fill="url(#ear)"/>
+<path d="M162 95Q156 120 169 135M168 91Q162 113 173 128M175 90Q170 112 177 125" stroke="#d9bca0" stroke-width="2" fill="none"/>
+<!-- two topknots -->
+<path d="M191 50Q163 8 141 27Q144 45 178 56Z" fill="#e7d3bc"/><path d="M214 47Q230 4 251 22Q252 45 221 56Z" fill="#b28c6b"/>
+<path d="M182 46Q160 22 143 29M226 43Q242 24 251 28" stroke="#fff3e1" stroke-width="4" fill="none"/>
+<path d="M182 48l8 3M216 49l8 2" stroke="#55bfae" stroke-width="6"/>
+<!-- eyes -->
+<ellipse cx="192" cy="90" rx="12" ry="14" fill="#41302c"/><ellipse cx="230" cy="91" rx="11" ry="13" fill="#2b2327"/>
+<circle cx="196" cy="85" r="4" fill="#fff"/><circle cx="233" cy="85" r="4" fill="#fff"/>
+<!-- muzzle -->
+<path d="M207 103Q190 101 190 116Q192 128 210 125Q231 134 240 117Q245 106 224 103Z" fill="#fff7ea"/>
+<path d="M207 105Q218 101 227 106Q232 112 222 117Q213 118 207 111Z" fill="#29262a"/>
+<path d="M216 117Q213 124 219 127Q228 128 232 122" fill="none" stroke="#67484c" stroke-width="2.5"/>
+<path d="M226 125Q232 121 233 129Q229 136 223 131" fill="#e993a3"/>
+<!-- whisker hairs -->
+<g stroke="#fffaf0" stroke-width="1.8"><path d="M203 113l-20-9M200 119l-24-1M203 123l-19 10M235 116l18-12M236 123l22-1M234 127l20 10"/></g>
+<!-- body fur texture -->
+<g stroke="#fff0dd" stroke-width="2" opacity=".7"><path d="M58 102l-5 14M75 108l-3 15M94 110l3 15M124 108l-2 16M148 100l-1 13"/></g>
+</g></svg>
