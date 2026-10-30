@@ -1,0 +1,52 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><meta name="theme-color" content="#fbecd9"><title>엄지의 냠냠 간식 시간</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f7ead8;color:#543b37;font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif}main{max-width:600px;margin:auto;padding:16px 13px 32px}h1{font-size:27px;margin:4px 0;color:#754838}.sub{margin:0 0 13px;color:#9b7265;font-size:13px}.top{display:flex;align-items:center;justify-content:space-between}.pill{font-size:12px;color:#965a45;background:#ffe3b6;border-radius:20px;padding:7px 10px;font-weight:800}.hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}.metric{background:white;border-radius:12px;padding:10px 5px;text-align:center;box-shadow:0 3px 10px #8e69421a}.metric small{display:block;color:#a18279}.metric b{font-size:20px;color:#c77752}#stage{position:relative;border:5px solid #e3c4a9;border-radius:21px;overflow:hidden;background:linear-gradient(#f6ddd0 0 65%,#d8b79c 65%);aspect-ratio:1/1;max-height:560px}canvas{width:100%;height:100%;display:block;touch-action:manipulation}#speech{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#fffdf5ed;padding:10px 14px;border-radius:20px;text-align:center;font-weight:800;font-size:14px;min-width:220px;box-shadow:0 5px 20px #4a2b2b22;pointer-events:none}#info{font-size:13px;color:#8f6d64;margin:12px 0 7px}.foods{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.food{background:#fffaf1;border:2px solid #eed8bd;border-radius:13px;padding:10px 3px;min-height:86px;color:#68483c;font-weight:800;cursor:pointer;touch-action:manipulation}.food:disabled{opacity:.5}.food.selected{border-color:#d98056;background:#fff0dd}.food span{display:block;font-size:27px}.food small{display:block;font-size:11px;margin-top:5px;line-height:1.25}.actions{display:grid;grid-template-columns:2fr 1fr;gap:9px;margin:12px 0}.btn{padding:14px 9px;border:0;border-radius:13px;background:#d78056;color:white;font-weight:900;font-size:17px;cursor:pointer}.btn.alt{background:#b9a18f}.btn:disabled{opacity:.5}.bottom{background:#fff9f0;border-radius:14px;padding:13px;line-height:1.6;color:#8d6b5b;font-size:13px}.hearts{color:#cf775c;font-size:20px;letter-spacing:3px}.note{font-size:11px;line-height:1.6;color:#8e7465;margin-top:12px}@media(max-width:400px){.food span{font-size:23px}.food small{font-size:10px}#speech{font-size:12px;min-width:190px}}</style></head><body><main><div class="top"><div><div class="pill">UMJI'S LITTLE DAY 🐾</div><h1>엄지의 냠냠 간식 시간</h1></div><span style="font-size:34px">💛</span></div><p class="sub">오빠가 주는 간식은 언제나 특별해!</p><div class="hud"><div class="metric"><small>행복도</small><b id="happy">0</b></div><div class="metric"><small>오늘의 추억</small><b id="count">0 / 5</b></div><div class="metric"><small>최고 행복</small><b id="best">0</b></div></div><div id="stage"><canvas id="scene" width="540" height="540" aria-label="엄지가 간식을 기다리는 귀여운 반응형 게임"></canvas><div id="speech">오빠, 오늘은 뭐 줄 거야? 🐶</div></div><p id="info">엄지가 좋아하는 간식을 선택해 봐!</p><div class="foods" id="foods"></div><div class="actions"><button class="btn" id="give">🍽️ 엄지에게 간식 주기</button><button class="btn alt" id="pet">💕 쓰다듬기</button></div><div class="bottom"><b>엄지와의 오늘</b><div id="story">좋아하는 간식을 고르고 엄지의 표정을 지켜봐.</div><div id="hearts" class="hearts">♡ ♡ ♡ ♡ ♡</div></div><div class="note">이 게임의 간식과 반응은 창작 연출이야. 실제 급여 권장사항은 아니며 특히 소시지·순대 내장 같은 양념·염분 높은 음식은 반려견에게 주지 않는 것이 안전해. 실제 먹이에는 수의사 조언을 따라줘.</div></main><script>
+"use strict";
+const foods=[["소시지","🌭","와! 고소한 냄새가 나!"],["고구마","🍠","달콤한 고구마, 엄지가 좋아!"],["동결건조 닭고기","🍗","바삭바삭! 냠냠!"],["순대 내장","🥣","신기한 간식이네! (게임 속에서만)"],["오이","🥒","아삭아삭! 시원해!"]];
+const $=id=>document.getElementById(id),canvas=$("scene"),g=canvas.getContext("2d");let chosen=1,happy=0,total=0,unique=new Set(),best=0,phase="idle",t=0,particles=[],last=performance.now(),animEnd=0;try{best=Number(localStorage.getItem("umji-snack-best")||0)||0}catch(e){}
+function ellipse(x,y,rx,ry,col,rot=0){g.fillStyle=col;g.beginPath();g.ellipse(x,y,rx,ry,rot,0,Math.PI*2);g.fill()}
+function stroke(x1,y1,x2,y2,col,w=2){g.strokeStyle=col;g.lineWidth=w;g.lineCap="round";g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function text(s,x,y,size=20){g.font=size+"px system-ui";g.textAlign="center";g.fillText(s,x,y)}
+function fur(cx,cy,rx,ry,color,count=18){for(let i=0;i<count;i++){let a=i/count*Math.PI*2;stroke(cx+Math.cos(a)*rx*.85,cy+Math.sin(a)*ry*.85,cx+Math.cos(a)*rx*1.11,cy+Math.sin(a)*ry*1.11,color,2)}}
+function dog(time){g.save();let bounce=phase==="chew"?Math.sin(time*18)*3:Math.sin(time*2.2)*1.4;g.translate(0,bounce);
+ellipse(274,472,135,17,"#88645930");
+ellipse(271,435,127,83,"#f9efdf");ellipse(273,406,109,82,"#b9916e");
+fur(271,445,125,73,"#fff3e6");
+ellipse(224,483,43,26,"#f9eddf");ellipse(331,483,43,26,"#f9eddf");
+for(let i=0;i<4;i++){stroke(195+i*15,492,195+i*15,499,"#c7ac92",2);stroke(302+i*15,492,302+i*15,499,"#c7ac92",2)}
+// long floppy ears
+ellipse(160,285,52,112,"#9e785e",-.15);ellipse(389,285,52,112,"#8c6b59",.15);
+ellipse(168,296,36,97,"#c8ab8d",-.12);ellipse(384,296,36,97,"#b79b84",.12);
+fur(165,306,32,90,"#e1cab6",21);fur(385,306,32,90,"#dbc5af",21);
+// round face and shih tzu markings
+ellipse(274,288,125,115,"#f1d8bd");ellipse(223,283,68,95,"#987458",-.12);ellipse(328,276,65,91,"#b59173",.1);
+ellipse(274,307,63,87,"#fff5e7");ellipse(268,250,22,53,"#fbf4e4");
+fur(273,292,118,105,"#e4c5a6",25);
+// two topknots turquoise green and blue
+ellipse(219,167,56,36,"#c5a58a",-.3);ellipse(321,166,53,36,"#c4a68c",.3);
+ellipse(200,150,42,24,"#e6cfb9",-.4);ellipse(339,152,40,25,"#e2c8ad",.4);
+ellipse(245,171,8,10,"#6bc5b1");ellipse(301,171,8,10,"#65b5d1");
+// eyes
+ellipse(219,292,25,30,"#413331");ellipse(332,292,25,30,"#322b30");
+ellipse(221,288,19,24,"#161923");ellipse(332,288,19,24,"#151a20");ellipse(211,278,8,9,"#fffefa");ellipse(324,277,8,9,"#fffefa");
+ellipse(227,299,3,4,"#cfd5ec");ellipse(339,298,3,4,"#cfd5ec");
+// muzzle beard
+ellipse(247,354,48,35,"#fff9ee",-.15);ellipse(307,354,48,35,"#fff9ee",.15);
+fur(277,365,70,36,"#efe0cf",19);
+ellipse(275,338,25,19,"#26252a");ellipse(269,333,7,3,"#676166");stroke(275,354,275,365,"#786367",3);
+if(phase==="chew"){ellipse(275,386,16,10,"#6f3842");ellipse(275,388,10,8,"#e889a0")}else{stroke(263,375,276,380,"#8e686a",3);stroke(276,380,291,375,"#8e686a",3);if(phase==="happy")ellipse(280,387,12,8,"#eb8da5")}
+for(let j=0;j<4;j++){stroke(236,350+j*6,209,342+j*7,"#fff9ee",2);stroke(315,349+j*6,347,342+j*7,"#fff9ee",2)}
+g.restore()}
+function render(time){let dt=Math.min(.05,(time-last)/1000);last=time;t+=dt;g.clearRect(0,0,540,540);
+g.fillStyle="#f4dbcc";g.fillRect(0,0,540,350);g.fillStyle="#d6ac90";g.fillRect(0,350,540,190);
+g.fillStyle="#fff3df";g.beginPath();g.roundRect(28,58,116,140,20);g.fill();g.fillStyle="#b9d8cc";g.beginPath();g.roundRect(38,67,96,122,14);g.fill();text("🌿",84,154,52);text("☀️",454,122,58);ellipse(275,519,215,28,"#a6775e55");
+dog(t);
+if(phase==="chew")text(foods[chosen][1],273,445+Math.sin(t*16)*4,39);
+particles=particles.filter(p=>p.life>0);for(let p of particles){p.y-=dt*p.speed;p.life-=dt;g.globalAlpha=Math.min(1,p.life*2);text(p.icon,p.x,p.y,22)}g.globalAlpha=1;
+if(animEnd&&time>=animEnd){phase="happy";animEnd=0;setTimeout(()=>{if(phase==="happy")phase="idle"},850)}
+requestAnimationFrame(render)}
+foods.forEach((f,i)=>{const b=document.createElement("button");b.className="food"+(i===chosen?" selected":"");b.innerHTML="<span>"+f[1]+"</span><small>"+f[0]+"</small>";b.onclick=()=>{chosen=i;document.querySelectorAll(".food").forEach((b,j)=>b.classList.toggle("selected",i===j));$("speech").textContent=f[1]+" "+f[0]+" 골랐구나!";phase="idle"};$("foods").append(b)});
+function scoreUpdate(){$("happy").textContent=happy;$("count").textContent=unique.size+" / 5";$("best").textContent=best;$("hearts").textContent="♥ ".repeat(unique.size)+"♡ ".repeat(5-unique.size)}
+$("give").onclick=()=>{if(phase==="chew")return;phase="chew";animEnd=performance.now()+1150;happy+=10;total++;unique.add(chosen);if(happy>best){best=happy;try{localStorage.setItem("umji-snack-best",String(best))}catch(e){}}$("speech").textContent=foods[chosen][2];$("story").textContent="엄지가 "+foods[chosen][0]+" 간식을 냠냠! 행복한 순간 "+total+"번째."+(unique.size===5?" 모든 간식을 만나 봤어! 🎉":"");for(let i=0;i<9;i++)particles.push({x:150+Math.random()*245,y:215+Math.random()*130,life:1.1+Math.random()*.6,speed:25+Math.random()*55,icon:i%3?"💗":"✨"});scoreUpdate()};
+$("pet").onclick=()=>{if(phase==="chew")return;phase="happy";$("speech").textContent="오빠 손길이 제일 좋아! 💕";$("story").textContent="엄지는 간식뿐 아니라 오빠의 따뜻한 손길도 좋아해.";for(let i=0;i<7;i++)particles.push({x:160+Math.random()*230,y:225+Math.random()*115,life:1.2,speed:40,icon:"💗"});setTimeout(()=>{if(phase==="happy")phase="idle"},1000)};
+scoreUpdate();requestAnimationFrame(render);
+</script></body></html>
