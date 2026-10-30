@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>낭만선술 × 버거스테이지</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#101b24;color:#fff;display:flex;justify-content:center}
+main{width:min(100%,620px);padding:16px 14px 36px}
+h1{font-size:25px;margin:8px 0 3px;color:#ffcf70}p{margin:0;color:#c9d0d8}
+.top{display:flex;justify-content:space-between;align-items:center}.tag{background:#344451;color:#ffcf70;padding:6px 10px;border-radius:20px;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0}
+.stat{background:#20303e;border:1px solid #344657;border-radius:12px;padding:10px;text-align:center}.stat b{font-size:22px;display:block;color:#fff}.stat small{color:#bdc9d1}
+canvas{width:100%;display:block;border:3px solid #3c5160;background:#24343d;border-radius:15px}
+.panel{background:#1c2c38;border:1px solid #344657;border-radius:14px;padding:13px;margin-top:12px}
+h2{margin:0 0 10px;font-size:17px}
+.orders{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.order{border:2px solid #496173;background:#293c4a;border-radius:10px;padding:10px;text-align:left;color:white;min-height:80px;font:inherit;cursor:pointer}
+.order.active{border-color:#ffcb69;background:#4a402f}
+.order small{display:block;color:#c8d5dc;font-size:12px;margin:5px 0}
+.track{height:6px;background:#121e26;border-radius:10px;overflow:hidden}.track span{height:100%;display:block;background:#f5bc56}
+.menu{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+button{touch-action:manipulation} .make{font:inherit;border:0;border-radius:10px;padding:13px 8px;background:#ffbf55;color:#242018;font-weight:800;cursor:pointer}
+.make:disabled{background:#6b7178;color:#d0d5da}
+#message{min-height:24px;text-align:center;margin-top:12px;color:#ffce76;font-size:14px}
+.action{background:#7ee0a3;color:#14271c;border:0;padding:13px 24px;border-radius:11px;font-weight:850;font-size:17px;cursor:pointer}
+.overlay{position:fixed;inset:0;background:#0c1824e8;display:grid;place-items:center;padding:20px;z-index:5}
+.modal{background:#20323e;border:1px solid #496073;border-radius:20px;text-align:center;padding:30px 20px;width:min(100%,400px);box-shadow:0 20px 60px #0008}
+.modal h2{font-size:28px;color:#ffca6a}.modal p{line-height:1.7;margin:12px 0 23px}
+footer{text-align:center;color:#94a3b0;font-size:12px;margin-top:15px}
+</style>
+</head>
+<body><main>
+<div class="top"><div><h1>🍺 낭만선술</h1><p>× 버거스테이지 · 야간 영업 대작전</p></div><span class="tag">2D 가게 운영</span></div>
+<div class="stats">
+<div class="stat"><b id="clock">60</b><small>남은 시간(초)</small></div>
+<div class="stat"><b id="revenue">0</b><small>매출(원)</small></div>
+<div class="stat"><b id="rating">⭐ 5.0</b><small>손님 만족도</small></div>
+</div>
+<canvas id="scene" width="560" height="286" aria-label="낭만선술의 실내 모습. 들어오는 손님이 주문을 기다립니다."></canvas>
+<section class="panel"><h2>📋 대기 중인 주문 <span id="count">0/4</span></h2><div class="orders" id="orders"></div></section>
+<section class="panel"><h2>👨‍🍳 메뉴 조리 <small style="font-size:12px;color:#bdc9d1">주문을 고르고 맞는 메뉴를 눌러!</small></h2><div class="menu" id="menu"></div><div id="message" role="status"></div></section>
+<footer>한 판 60초 · 손님이 떠나기 전에 주문을 완성해 보세요.</footer>
+</main>
+<div class="overlay" id="overlay"><div class="modal"><h2 id="modalTitle">낭만선술 오픈!</h2><p id="modalText">햄버거와 선술집 안주를 함께 파는 야간 가게예요.<br>주문 카드를 선택하고 해당 메뉴를 조리하세요.<br>60초 동안 매출을 최대한 올려 보세요!</p><button id="start" class="action">영업 시작 ▶</button></div></div>
+<script>
+"use strict";
+const items=[
+{id:"burger",label:"스테이지 버거",icon:"🍔",price:8500,work:1150},
+{id:"fries",label:"감자튀김",icon:"🍟",price:4500,work:850},
+{id:"wings",label:"버팔로윙",icon:"🍗",price:14000,work:1600},
+{id:"corn",label:"콘치즈",icon:"🧀",price:6900,work:950}
+];
+const $=id=>document.getElementById(id);
+const ctx=$("scene").getContext("2d");
+let orders=[],selected=null,nextId=1,seconds=60,revenue=0,served=0,missed=0,running=false,cooking=false,last=0,spawn=0,frame=0;
+const won=n=>n.toLocaleString("ko-KR");
+function say(t){$("message").textContent=t}
+function reset(){
+orders=[];selected=null;nextId=1;seconds=60;revenue=0;served=0;missed=0;running=true;cooking=false;spawn=0;last=performance.now();frame=0;
+addOrder();addOrder();update();requestAnimationFrame(loop)
+}
+function addOrder(){
+if(orders.length>=4)return;
+const it=items[Math.floor(Math.random()*items.length)];
+orders.push({id:nextId++,item:it,remaining:15+Math.random()*9,max:24});
+if(selected===null)selected=orders[0].id
+}
+function update(){
+$("clock").textContent=Math.ceil(seconds);
+$("revenue").textContent=won(revenue);
+$("rating").textContent="⭐ "+Math.max(1,5-missed*.4).toFixed(1);
+$("count").textContent=orders.length+"/4";
+$("orders").replaceChildren();
+orders.forEach(o=>{
+const b=document.createElement("button");b.className="order"+(selected===o.id?" active":"");
+const label=document.createElement("strong");label.textContent=o.item.icon+" "+o.item.label;
+const sub=document.createElement("small");sub.textContent=won(o.item.price)+"원 · "+Math.ceil(o.remaining)+"초 남음";
+const track=document.createElement("div");track.className="track";const span=document.createElement("span");span.style.width=Math.max(0,100*o.remaining/o.max)+"%";if(o.remaining<6)span.style.background="#f16d68";track.append(span);b.append(label,sub,track);
+b.onclick=()=>{selected=o.id;update()};$("orders").append(b)
+});
+if(!orders.length)$("orders").textContent="새 주문을 기다리는 중…";
+for(const b of $("menu").querySelectorAll("button"))b.disabled=!running||cooking
+}
+function cook(item){
+if(!running||cooking)return;
+const o=orders.find(x=>x.id===selected);
+if(!o){say("먼저 주문 카드를 선택하세요!");return}
+if(o.item.id!==item.id){say("❌ 메뉴가 달라요! 주문표를 확인하세요.");return}
+cooking=true;say(item.icon+" "+item.label+" 조리 중…");update();
+const id=o.id;const duration=item.work;
+setTimeout(()=>{
+if(!running)return;
+cooking=false;
+const at=orders.findIndex(x=>x.id===id);
+if(at>=0){orders.splice(at,1);revenue+=item.price;served++;say("✅ 서빙 성공! +"+won(item.price)+"원");selected=orders[0]?.id??null}
+else say("손님이 먼저 떠났어요!");
+update()
+},duration)
+}
+function draw(t){
+const w=560,h=286;
+ctx.clearRect(0,0,w,h);
+ctx.fillStyle="#283b4a";ctx.fillRect(0,0,w,h);
+ctx.fillStyle="#1c2b36";ctx.fillRect(0,180,w,106);
+ctx.fillStyle="#bb824d";ctx.fillRect(0,175,w,11);
+ctx.fillStyle="#f2b750";ctx.fillRect(22,26,144,65);
+ctx.fillStyle="#342e2f";ctx.fillRect(27,31,134,55);
+ctx.font="bold 22px sans-serif";ctx.fillStyle="#ffd78d";ctx.fillText("낭만선술",41,69);
+ctx.fillStyle="#65798a";ctx.fillRect(343,25,172,107);ctx.fillStyle="#acc4d1";ctx.fillRect(351,33,156,91);
+ctx.fillStyle="#20333a";ctx.fillRect(428,33,5,91);ctx.fillRect(351,76,156,5);
+ctx.font="25px sans-serif";ctx.fillText("🌙",457,65);
+ctx.fillStyle="#70503e";ctx.fillRect(22,133,210,12);ctx.fillRect(37,145,10,45);ctx.fillRect(204,145,10,45);
+ctx.font="39px sans-serif";ctx.fillText("🍔",53,130);ctx.fillText("🍟",121,130);ctx.fillText("🍺",181,130);
+ctx.fillStyle="#b57c4a";ctx.fillRect(0,220,w,40);
+ctx.fillStyle="#e4a45d";ctx.fillRect(0,210,w,13);
+const positions=[[292,153],[383,153],[473,153],[292,235]];
+orders.slice(0,4).forEach((o,i)=>{
+const [x,y]=positions[i];const bob=Math.sin(t/360+i)*3;
+ctx.font="43px sans-serif";ctx.fillText(["🧑","👩","👨","👩‍🦱"][i],x-22,y+bob);
+ctx.fillStyle="#fff8e6";ctx.beginPath();ctx.roundRect(x-28,y-73,65,27,9);ctx.fill();
+ctx.font="18px sans-serif";ctx.fillStyle="#312a21";ctx.fillText(o.item.icon+" ⏳",x-21,y-53)
+});
+ctx.font="40px sans-serif";ctx.fillText("👨‍🍳",87,211+Math.sin(t/320)*2);
+ctx.font="bold 14px sans-serif";ctx.fillStyle="#fbe6b7";ctx.fillText("BURGERS × PUB",24,274)
+}
+function loop(t){
+if(!running)return;
+const dt=Math.min((t-last)/1000,.1);last=t;seconds-=dt;spawn+=dt;
+for(const o of orders)o.remaining-=dt;
+const old=orders.length;orders=orders.filter(o=>o.remaining>0);
+if(orders.length<old){missed+=old-orders.length;say("😢 기다리던 손님이 떠났어요!");if(!orders.some(o=>o.id===selected))selected=orders[0]?.id??null}
+if(spawn>=3.2){spawn=0;addOrder()}
+if(seconds<=0){seconds=0;running=false;update();draw(t);$("modalTitle").textContent="오늘 장사 마감!";$("modalText").textContent="총 매출 "+won(revenue)+"원 · 서빙 "+served+"건 · 놓친 주문 "+missed+"건\n"+(served>=10?"오늘은 대박 장사! 🎉":"다음엔 더 빠르게 서빙해 봐요!");$("start").textContent="다시 영업하기 ↻";$("overlay").style.display="grid";return}
+if(++frame%8===0)update();
+draw(t);requestAnimationFrame(loop)
+}
+items.forEach(it=>{const b=document.createElement("button");b.className="make";b.textContent=it.icon+" "+it.label;b.onclick=()=>cook(it);$("menu").append(b)});
+$("start").onclick=()=>{$("overlay").style.display="none";reset();say("어서 오세요! 주문을 받아 보세요.")};
+update();draw(0);
+</script></body></html>
